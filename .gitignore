@@ -39,3 +39,4 @@ MANIFEST
 
 notebook/
 .vscode/
+.DS_Store

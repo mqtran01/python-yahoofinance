@@ -1,3 +1,7 @@
+"""
+File is no longer used. Will likely be removed at a later update.
+"""
+
 import urllib
 from http.cookiejar import CookieJar
 import re
@@ -19,7 +23,7 @@ class QueryEngine:
 
         if not isinstance(start_date, date):
             start_date = datetime.strptime(start_date, date_format_string).date()
-        
+
         if not isinstance(end_date, date):
             end_date = datetime.strptime(end_date, date_format_string).date()
 
@@ -41,7 +45,7 @@ class QueryEngine:
         )
 
         return r.text
-        
+
 
 
     def _find_cookie_crumb_pair(self):
@@ -54,10 +58,10 @@ class QueryEngine:
             if c.name == 'B':
                 cookie_piece = c.value
                 break
-        
+
         if cookie_piece is None:
             raise ValueError("Cookie not found")
-        
+
         try:
             res = r.read().decode()
         except:
