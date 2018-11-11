@@ -4,6 +4,7 @@ import json
 import csv
 import requests
 import re
+import pandas as pd
 
 from .data_configs import DataFormat, Locale
 
@@ -21,10 +22,11 @@ class IYahooData(ABC):
 
     @staticmethod
     def _csv_row(dataset, heading, index, data_fmt):
-        default_row = {
-            x: '-' for x in DataFormat._FORMATS
-        }
         return [heading, ''] + [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
+
+    @staticmethod
+    def _df_row(dataset, index, data_fmt):
+        return [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
 
     @staticmethod
     def _fetch_quote_summary(url):
@@ -32,16 +34,17 @@ class IYahooData(ABC):
         soup = BeautifulSoup(html,'html.parser')
 
         soup_script = soup.find("script",text=re.compile("root.App.main")).text
-        json_script = json.loads(re.search("root.App.main\s+=\s+(\{.*\})",soup_script)[1])
+        json_script = json.loads(re.search(r"root.App.main\s+=\s+(\{.*\})",soup_script)[1])
         # return json_script
         return json_script['context']['dispatcher']['stores']['QuoteSummaryStore']
 
 
 class CashFlow(IYahooData):
-    _table_mapping = (
-        {
-            'header': 'Operating activities, cash flow provided by or used in',
-            'data_map': [
+    _df_mapping = {
+        'Overall': [
+            ('Net Income', 'netIncome')
+        ],
+        'Operating activities': [
                 ('Depreciation', 'depreciation'),
                 ('Adjustments to net income', 'changeToNetincome'),
                 ('Changes in accounts receivable', 'changeToAccountReceivables'),
@@ -49,29 +52,27 @@ class CashFlow(IYahooData):
                 ('Changes in inventory', 'changeToInventory'),
                 ('Changes in other operating activities', 'changeToOperatingActivities'),
                 ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
-            ]
-        },
-        {
-            'header': 'Investment activities, cash flow provided by or used in',
-            'data_map': [
+            ],
+        'Investment activities': [
                 ('Capital expenditure', 'capitalExpenditures'),
                 ('Investments', 'investments'),
                 ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
                 ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
-            ]
-        },
-        {
-            'header': 'Financing activities, cash flow provided by or used in',
-            'data_map': [
+            ],
+        'Financing activities': [
                 ('Dividends paid', 'dividendsPaid'),
                 # TODO: Find the correct header for this item
                 ('Sale purchase of stock', '???'),
                 ('Net borrowings', 'netBorrowings'),
                 ('Other cash flow from financing activities', 'otherCashflowsFromFinancingActivities'),
                 ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
-            ]
-        }
-    )
+            ],
+        'Changes in Cash': [
+            # TODO: Find the correct header for this item
+            ('Effect of exchange rate changes', '???'),
+            ('Change in cash and cash equivalents', 'changeInCash')
+        ]
+    }
 
     def __init__(self, stock, locale=Locale.US):
         super().__init__(stock, locale)
@@ -85,28 +86,35 @@ class CashFlow(IYahooData):
         with open(path, 'w') as file_handle:
             csv_handle = csv.writer(file_handle, delimiter=sep)
 
-            csv_handle.writerow([self._header_text()])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt'))
+            csv_rows = [self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt')]
+            for k, v in self._df_mapping.items():
+                csv_rows.append([])
+                csv_rows.append([k])
+                for name, key in v:
+                    csv_rows.append(self._csv_row(self.cashflow, name, key, data_format))
+            csv_handle.writerows(csv_rows)
 
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Net income', 'netIncome', data_format))
+    def to_dfs(self, data_format=DataFormat.RAW):
+        cols = [i['endDate']['fmt'] for i in self.cashflow]
+        multiindex = []
+        data = []
+        for k, v in self._df_mapping.items():
+            for name, key in v:
+                index = (k, name)
+                multiindex.append(index)
+                data.append(self._df_row(self.cashflow, key, data_format))
 
-            for header_mapping in self._table_mapping:
-                csv_handle.writerow([])
-                csv_handle.writerow([header_mapping['header']])
-                for data_mapping in header_mapping['data_map']:
-                    csv_handle.writerow(self._csv_row(self.cashflow, data_mapping[0], data_mapping[1], data_format))
-                    
-            
-            csv_handle.writerow([])
-            # TODO: Find the correct header for this item
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Effect of exchange rate changes', '???', data_format))
-            
-            csv_handle.writerow([])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Change in cash and cash equivalents', 'changeInCash', data_format))
+        idx = pd.MultiIndex.from_tuples(multiindex, names=('Subject', 'Item'))
+        df = pd.DataFrame(data, idx, cols)
+        df_dict = {
+            x: df.xs(x) for x in self._df_mapping.keys()
+        }
+        df_dict['Cash Flow'] = df
+        return df_dict
 
     def _header_text(self):
         return 'Cash Flow (Annual)'
-    
+
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistory']['cashflowStatements']
 
@@ -114,7 +122,7 @@ class CashFlow(IYahooData):
 class CashFlowQuarterly(CashFlow):
     def _header_text(self):
         return 'Cash Flow (Quarterly)'
-    
+
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistoryQuarterly']['cashflowStatements']
 

@@ -38,3 +38,4 @@ MANIFEST
 .mypy_cache/
 
 notebook/
+.vscode/
