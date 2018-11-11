@@ -4,6 +4,7 @@ import json
 import csv
 import requests
 import re
+import pandas as pd
 
 from .data_configs import DataFormat, Locale
 
@@ -27,6 +28,10 @@ class IYahooData(ABC):
         return [heading, ''] + [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
 
     @staticmethod
+    def _df_row(dataset, index, data_fmt):
+        return [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
+
+    @staticmethod
     def _fetch_quote_summary(url):
         html = requests.get(url).text
         soup = BeautifulSoup(html,'html.parser')
@@ -38,6 +43,39 @@ class IYahooData(ABC):
 
 
 class CashFlow(IYahooData):
+    _df_mapping = {
+        'Overall': [
+            ('Net Income', 'netIncome')
+        ],
+        'Operating activities, cash flow provided by or used in': [
+                ('Depreciation', 'depreciation'),
+                ('Adjustments to net income', 'changeToNetincome'),
+                ('Changes in accounts receivable', 'changeToAccountReceivables'),
+                ('Changes in liabilities', 'changeToLiabilities'),
+                ('Changes in inventory', 'changeToInventory'),
+                ('Changes in other operating activities', 'changeToOperatingActivities'),
+                ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
+            ],
+        'Investment activities, cash flow provided by or used in': [
+                ('Capital expenditure', 'capitalExpenditures'),
+                ('Investments', 'investments'),
+                ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
+                ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
+            ],
+        'Financing activities, cash flow provided by or used in': [
+                ('Dividends paid', 'dividendsPaid'),
+                # TODO: Find the correct header for this item
+                ('Sale purchase of stock', '???'),
+                ('Net borrowings', 'netBorrowings'),
+                ('Other cash flow from financing activities', 'otherCashflowsFromFinancingActivities'),
+                ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
+            ],
+        'Changes in Cash': [
+            ('Effect of exchange rate changes', '???'),
+            ('Change in cash and cash equivalents', 'changeInCash')
+        ]
+    }
+
     _table_mapping = (
         {
             'header': 'Operating activities, cash flow provided by or used in',
@@ -95,18 +133,36 @@ class CashFlow(IYahooData):
                 csv_handle.writerow([header_mapping['header']])
                 for data_mapping in header_mapping['data_map']:
                     csv_handle.writerow(self._csv_row(self.cashflow, data_mapping[0], data_mapping[1], data_format))
-                    
-            
+
+
             csv_handle.writerow([])
             # TODO: Find the correct header for this item
             csv_handle.writerow(self._csv_row(self.cashflow, 'Effect of exchange rate changes', '???', data_format))
-            
+
             csv_handle.writerow([])
             csv_handle.writerow(self._csv_row(self.cashflow, 'Change in cash and cash equivalents', 'changeInCash', data_format))
 
+    def to_dfs(self, data_format=DataFormat.RAW):
+        cols = [i['endDate']['fmt'] for i in self.cashflow]
+        multiindex = []
+        data = []
+        for k, v in self._df_mapping.items():
+            for name, key in v:
+                index = (k, name)
+                multiindex.append(index)
+                data.append(self._df_row(self.cashflow, key, data_format))
+
+        idx = pd.MultiIndex.from_tuples(multiindex, names=('Subject', 'Item'))
+        df = pd.DataFrame(data, idx, cols)
+        df_dict = {
+            x: df.xs(x) for x in self._df_mapping.keys()
+        }
+        df_dict['Cash Flow'] = df
+        return df_dict
+
     def _header_text(self):
         return 'Cash Flow (Annual)'
-    
+
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistory']['cashflowStatements']
 
@@ -114,7 +170,7 @@ class CashFlow(IYahooData):
 class CashFlowQuarterly(CashFlow):
     def _header_text(self):
         return 'Cash Flow (Quarterly)'
-    
+
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistoryQuarterly']['cashflowStatements']
 
