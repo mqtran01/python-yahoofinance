@@ -6,8 +6,9 @@ import requests
 import re
 import pandas as pd
 from io import StringIO
+from datetime import date, datetime
 
-from .data_configs import DataFormat, Locale
+from .data_configs import DataFormat, Locale, DataEvent, DataFrequency
 
 class IYahooData(ABC):
     _default_row = {
@@ -19,6 +20,10 @@ class IYahooData(ABC):
 
     @abstractmethod
     def to_csv(self, path, sep, data_format, csv_dialect):
+        pass
+
+    @abstractmethod
+    def to_dfs(self, data_format):
         pass
 
     @staticmethod
@@ -46,28 +51,28 @@ class CashFlow(IYahooData):
             ('Net Income', 'netIncome')
         ],
         'Operating activities': [
-                ('Depreciation', 'depreciation'),
-                ('Adjustments to net income', 'changeToNetincome'),
-                ('Changes in accounts receivable', 'changeToAccountReceivables'),
-                ('Changes in liabilities', 'changeToLiabilities'),
-                ('Changes in inventory', 'changeToInventory'),
-                ('Changes in other operating activities', 'changeToOperatingActivities'),
-                ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
-            ],
+            ('Depreciation', 'depreciation'),
+            ('Adjustments to net income', 'changeToNetincome'),
+            ('Changes in accounts receivable', 'changeToAccountReceivables'),
+            ('Changes in liabilities', 'changeToLiabilities'),
+            ('Changes in inventory', 'changeToInventory'),
+            ('Changes in other operating activities', 'changeToOperatingActivities'),
+            ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
+        ],
         'Investment activities': [
-                ('Capital expenditure', 'capitalExpenditures'),
-                ('Investments', 'investments'),
-                ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
-                ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
-            ],
+            ('Capital expenditure', 'capitalExpenditures'),
+            ('Investments', 'investments'),
+            ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
+            ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
+        ],
         'Financing activities': [
-                ('Dividends paid', 'dividendsPaid'),
-                # TODO: Find the correct header for this item
-                ('Sale purchase of stock', '???'),
-                ('Net borrowings', 'netBorrowings'),
-                ('Other cash flow from financing activities', 'otherCashflowsFromFinancingActivities'),
-                ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
-            ],
+            ('Dividends paid', 'dividendsPaid'),
+            # TODO: Find the correct header for this item
+            ('Sale purchase of stock', '???'),
+            ('Net borrowings', 'netBorrowings'),
+            ('Other cash flow from financing activities', 'otherCashflowsFromFinancingActivities'),
+            ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
+        ],
         'Changes in Cash': [
             # TODO: Find the correct header for this item
             ('Effect of exchange rate changes', '???'),
@@ -167,7 +172,8 @@ class AssetProfile(IYahooData):
 
         self.profile = fin_data['assetProfile']
 
-    def to_csv(self, path, line_terminator='\n', sep=',', data_format=DataFormat.RAW):
+    def to_csv(self, path, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        # TODO: Streamline this
         with open(path, 'w') as file_handle:
             csv_handle = csv.writer(file_handle, delimiter=sep)
 
@@ -188,3 +194,75 @@ class AssetProfile(IYahooData):
                     executive.get('exercisedValue', IYahooData._default_row)[data_format],
                     executive.get('yearBorn')
                     ])
+
+    def to_dfs(self, data_format=DataFormat.RAW):
+        raise NotImplementedError()
+
+class HistoricalPrices(IYahooData):
+    _min_date = date(1970,1,1)
+
+    def __init__(
+            self, instrument, start_date, end_date, date_format_string="%Y-%m-%d",
+            event=DataEvent.HISTORICAL_PRICES, frequency=DataFrequency.DAILY, locale=Locale.US):
+
+        if not isinstance(start_date, date):
+            start_date = datetime.strptime(start_date, date_format_string).date()
+
+        if not isinstance(end_date, date):
+            end_date = datetime.strptime(end_date, date_format_string).date()
+
+        start_period = int((start_date - self._min_date).total_seconds())
+        end_period = int((end_date - self._min_date).total_seconds())
+
+        cookie, crumb = self._find_cookie_crumb_pair(locale)
+
+        url = 'https://query1.finance.yahoo.com/v7/finance/download/{i}'
+        r= requests.get(url.format(i=instrument),
+            cookies={'B': cookie},
+            params={
+                "period1": start_period,
+                "period2": end_period,
+                "interval": frequency,
+                "event": event,
+                "crumb": crumb
+            }
+        )
+
+        self.prices = r.text
+
+    def _find_cookie_crumb_pair(self, locale):
+        url = Locale.locale_url(locale) + '/AAPL/history'
+        res = requests.get(url)
+        try:
+            cookie = res.cookies['B']
+        except KeyError:
+            raise ValueError("Cookie not found")
+
+        # TODO: Consider bs4 to make processing faster?
+        pattern = r'"CrumbStore":{"crumb":"(.+?)"}'
+        matcher = re.search(pattern, res.text)
+        if matcher:
+            crumb = matcher.group(1)
+        else:
+            raise ValueError("Crumb not found")
+
+        # Handles the slash encoding as the character is allowed
+        crumb = crumb.replace('\\u002F', '/')
+
+        return cookie, crumb
+
+    def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        csv_data = self.prices
+        # HACK: To reverse the new line encoding provided. Find a better way to handle this
+        if csv_dialect == 'excel':
+            csv_data.replace('\n', '\r\n')
+
+        if path is None:
+            return self.prices
+
+        with open(path, 'w') as file_handle:
+            file_handle.write(csv_data)
+
+    def to_dfs(self, data_format=DataFormat.RAW):
+        # This is not affected by the data format
+        return {'Historical Prices': pd.read_csv(StringIO(self.prices), index_col=['Date'])}
