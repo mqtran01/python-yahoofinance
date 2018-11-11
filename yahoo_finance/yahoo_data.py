@@ -3,8 +3,9 @@ from bs4 import BeautifulSoup
 import json
 import csv
 import requests
+import re
 
-from data_configs import DataFormat, Locale
+from .data_configs import DataFormat, Locale
 
 class IYahooData(ABC):
     _default_row = {
@@ -12,11 +13,7 @@ class IYahooData(ABC):
     }
 
     def __init__(self, stock, locale):
-        if locale == Locale.US:
-            # Special case because the US is special
-            self._base_url = "https://finance.yahoo.com"
-        else:
-            self._base_url = "https://{}.finance.yahoo.com".format(locale)
+        self._base_url = Locale.locale_url(locale)
 
     @abstractmethod
     def to_csv(self, path, line_terminator, sep):
@@ -123,16 +120,26 @@ class CashFlowQuarterly(CashFlow):
 
 
 class AssetProfile(IYahooData):
-    _info_mapping = {
-        ()
-    }
+    _info_mapping = (
+        ('Address', 'address1'),
+        # TODO: Will there be address2, 3 etc.?
+        ('City', 'city'),
+        ('State', 'CA'),
+        ('Country', 'country'),
+        ('Phone', 'phone'),
+        ('Website', 'website'),
+        ('Sector', 'sector'),
+        ('Industry', 'industry'),
+        ('Full Time Employees', 'fullTimeEmployees')
+    )
 
-    _exec_mapping = {
+    _exec_mapping = (
         ('Name', 'name'),
-        ('Age', 'age'),
+        ('Title', 'title'),
+        ('Pay', 'totalPay'),
+        ('Exercised', 'exercisedValue'),
         ('Year Born', 'yearBorn'),
-        ('Exercised Value', 'exercised')
-    }
+    )
 
     def __init__(self, stock, locale=Locale.US):
         super().__init__(stock, locale)
@@ -147,21 +154,19 @@ class AssetProfile(IYahooData):
             csv_handle = csv.writer(file_handle, delimiter=sep)
 
             csv_handle.writerow(['Profile'])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt'))
 
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Net income', 'netIncome', data_format))
+            for mapping in self._info_mapping:
+                csv_handle.writerow([mapping[0], self.profile.get(mapping[1], '-')])
 
-            for header_mapping in self._table_mapping:
-                csv_handle.writerow([])
-                csv_handle.writerow([header_mapping['header']])
-                for data_mapping in header_mapping['data_map']:
-                    csv_handle.writerow(self._csv_row(self.cashflow, data_mapping[0], data_mapping[1], data_format))
-                    
-            
             csv_handle.writerow([])
-            # TODO: Find the correct header for this item
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Effect of exchange rate changes', '???', data_format))
-            
-            csv_handle.writerow([])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Change in cash and cash equivalents', 'changeInCash', data_format))
+            csv_handle.writerow(['Key Executives'])
+            csv_handle.writerow([i[0] for i in self._exec_mapping])
 
+            for executive in self.profile.get('companyOfficers', []):
+                csv_handle.writerow([
+                    executive.get('name'),
+                    executive.get('title'),
+                    executive.get('totalPay', IYahooData._default_row)[data_format],
+                    executive.get('exercisedValue', IYahooData._default_row)[data_format],
+                    executive.get('yearBorn')
+                    ])

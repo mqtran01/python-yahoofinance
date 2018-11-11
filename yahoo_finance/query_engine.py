@@ -4,7 +4,7 @@ import re
 from datetime import date, datetime
 import requests
 
-from data_configs import DataFormat, DataEvent, DataFrequency
+from .data_configs import DataFormat, DataEvent, DataFrequency, Locale
 
 
 class QueryEngine:
@@ -12,11 +12,7 @@ class QueryEngine:
     Engine that is able to query historical data from Yahoo.
     """
     def __init__(self, locale=Locale.US):
-        if locale == Locale.US:
-            # Special case because the US is special
-            self._base_url = "https://finance.yahoo.com"
-        else:
-            self._base_url = "https://{}.finance.yahoo.com".format(locale)
+        self._base_url = Locale.locale_url(locale)
 
     def fetch_historial_data(self, instrument, start_date, end_date, date_format_string="%Y-%m-%d", event=DataEvent.HISTORICAL_PRICES, frequency=DataFrequency.DAILY):
         min_date = date(1970,1,1)
