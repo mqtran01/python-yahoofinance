@@ -22,9 +22,6 @@ class IYahooData(ABC):
 
     @staticmethod
     def _csv_row(dataset, heading, index, data_fmt):
-        default_row = {
-            x: '-' for x in DataFormat._FORMATS
-        }
         return [heading, ''] + [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
 
     @staticmethod
@@ -37,7 +34,7 @@ class IYahooData(ABC):
         soup = BeautifulSoup(html,'html.parser')
 
         soup_script = soup.find("script",text=re.compile("root.App.main")).text
-        json_script = json.loads(re.search("root.App.main\s+=\s+(\{.*\})",soup_script)[1])
+        json_script = json.loads(re.search(r"root.App.main\s+=\s+(\{.*\})",soup_script)[1])
         # return json_script
         return json_script['context']['dispatcher']['stores']['QuoteSummaryStore']
 
@@ -47,7 +44,7 @@ class CashFlow(IYahooData):
         'Overall': [
             ('Net Income', 'netIncome')
         ],
-        'Operating activities, cash flow provided by or used in': [
+        'Operating activities': [
                 ('Depreciation', 'depreciation'),
                 ('Adjustments to net income', 'changeToNetincome'),
                 ('Changes in accounts receivable', 'changeToAccountReceivables'),
@@ -56,13 +53,13 @@ class CashFlow(IYahooData):
                 ('Changes in other operating activities', 'changeToOperatingActivities'),
                 ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
             ],
-        'Investment activities, cash flow provided by or used in': [
+        'Investment activities': [
                 ('Capital expenditure', 'capitalExpenditures'),
                 ('Investments', 'investments'),
                 ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
                 ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
             ],
-        'Financing activities, cash flow provided by or used in': [
+        'Financing activities': [
                 ('Dividends paid', 'dividendsPaid'),
                 # TODO: Find the correct header for this item
                 ('Sale purchase of stock', '???'),
@@ -71,45 +68,11 @@ class CashFlow(IYahooData):
                 ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
             ],
         'Changes in Cash': [
+            # TODO: Find the correct header for this item
             ('Effect of exchange rate changes', '???'),
             ('Change in cash and cash equivalents', 'changeInCash')
         ]
     }
-
-    _table_mapping = (
-        {
-            'header': 'Operating activities, cash flow provided by or used in',
-            'data_map': [
-                ('Depreciation', 'depreciation'),
-                ('Adjustments to net income', 'changeToNetincome'),
-                ('Changes in accounts receivable', 'changeToAccountReceivables'),
-                ('Changes in liabilities', 'changeToLiabilities'),
-                ('Changes in inventory', 'changeToInventory'),
-                ('Changes in other operating activities', 'changeToOperatingActivities'),
-                ('Total cash flow from operating activities', 'totalCashFromOperatingActivities')
-            ]
-        },
-        {
-            'header': 'Investment activities, cash flow provided by or used in',
-            'data_map': [
-                ('Capital expenditure', 'capitalExpenditures'),
-                ('Investments', 'investments'),
-                ('Other cash flow from investment activities', 'otherCashflowsFromInvestingActivities'),
-                ('Total cash flow from investment activities', 'totalCashflowsFromInvestingActivities'),
-            ]
-        },
-        {
-            'header': 'Financing activities, cash flow provided by or used in',
-            'data_map': [
-                ('Dividends paid', 'dividendsPaid'),
-                # TODO: Find the correct header for this item
-                ('Sale purchase of stock', '???'),
-                ('Net borrowings', 'netBorrowings'),
-                ('Other cash flow from financing activities', 'otherCashflowsFromFinancingActivities'),
-                ('Total cash flow from financing activities', 'totalCashFromFinancingActivities')
-            ]
-        }
-    )
 
     def __init__(self, stock, locale=Locale.US):
         super().__init__(stock, locale)
@@ -123,24 +86,13 @@ class CashFlow(IYahooData):
         with open(path, 'w') as file_handle:
             csv_handle = csv.writer(file_handle, delimiter=sep)
 
-            csv_handle.writerow([self._header_text()])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt'))
-
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Net income', 'netIncome', data_format))
-
-            for header_mapping in self._table_mapping:
-                csv_handle.writerow([])
-                csv_handle.writerow([header_mapping['header']])
-                for data_mapping in header_mapping['data_map']:
-                    csv_handle.writerow(self._csv_row(self.cashflow, data_mapping[0], data_mapping[1], data_format))
-
-
-            csv_handle.writerow([])
-            # TODO: Find the correct header for this item
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Effect of exchange rate changes', '???', data_format))
-
-            csv_handle.writerow([])
-            csv_handle.writerow(self._csv_row(self.cashflow, 'Change in cash and cash equivalents', 'changeInCash', data_format))
+            csv_rows = [self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt')]
+            for k, v in self._df_mapping.items():
+                csv_rows.append([])
+                csv_rows.append([k])
+                for name, key in v:
+                    csv_rows.append(self._csv_row(self.cashflow, name, key, data_format))
+            csv_handle.writerows(csv_rows)
 
     def to_dfs(self, data_format=DataFormat.RAW):
         cols = [i['endDate']['fmt'] for i in self.cashflow]
