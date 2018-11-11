@@ -3,13 +3,17 @@ from bs4 import BeautifulSoup
 import json
 import csv
 import requests
+import re
 
-from data_configs import DataFormat, Locale
+from .data_configs import DataFormat, Locale
 
 class IYahooData(ABC):
     _default_row = {
         x: '-' for x in DataFormat._FORMATS
     }
+
+    def __init__(self, stock, locale):
+        self._base_url = Locale.locale_url(locale)
 
     @abstractmethod
     def to_csv(self, path, line_terminator, sep):
@@ -21,6 +25,16 @@ class IYahooData(ABC):
             x: '-' for x in DataFormat._FORMATS
         }
         return [heading, ''] + [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
+
+    @staticmethod
+    def _fetch_quote_summary(url):
+        html = requests.get(url).text
+        soup = BeautifulSoup(html,'html.parser')
+
+        soup_script = soup.find("script",text=re.compile("root.App.main")).text
+        json_script = json.loads(re.search("root.App.main\s+=\s+(\{.*\})",soup_script)[1])
+        # return json_script
+        return json_script['context']['dispatcher']['stores']['QuoteSummaryStore']
 
 
 class CashFlow(IYahooData):
@@ -59,14 +73,10 @@ class CashFlow(IYahooData):
         }
     )
 
-    def __init__(self, stock):
-        url = 'https://finance.yahoo.com/quote/{}/financials'.format(stock)
-        html = requests.get(url).text
-        soup = BeautifulSoup(html,'html.parser')
-
-        soup_script = soup.find("script",text=re.compile("root.App.main")).text
-        json_script = json.loads(re.search("root.App.main\s+=\s+(\{.*\})",soup_script)[1])
-        fin_data = json_script['context']['dispatcher']['stores']['QuoteSummaryStore']
+    def __init__(self, stock, locale=Locale.US):
+        super().__init__(stock, locale)
+        url = self._base_url + '/{}/financials'.format(stock)
+        fin_data = self._fetch_quote_summary(url)
 
         self.cashflow = self._extract_cashflow(fin_data)
         self.cashflow.sort(key=lambda x: x['endDate']['raw'], reverse=True)
@@ -107,3 +117,56 @@ class CashFlowQuarterly(CashFlow):
     
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistoryQuarterly']['cashflowStatements']
+
+
+class AssetProfile(IYahooData):
+    _info_mapping = (
+        ('Address', 'address1'),
+        # TODO: Will there be address2, 3 etc.?
+        ('City', 'city'),
+        ('State', 'CA'),
+        ('Country', 'country'),
+        ('Phone', 'phone'),
+        ('Website', 'website'),
+        ('Sector', 'sector'),
+        ('Industry', 'industry'),
+        ('Full Time Employees', 'fullTimeEmployees')
+    )
+
+    _exec_mapping = (
+        ('Name', 'name'),
+        ('Title', 'title'),
+        ('Pay', 'totalPay'),
+        ('Exercised', 'exercisedValue'),
+        ('Year Born', 'yearBorn'),
+    )
+
+    def __init__(self, stock, locale=Locale.US):
+        super().__init__(stock, locale)
+
+        url = self._base_url + '/{}/profile'.format(stock)
+        fin_data = self._fetch_quote_summary(url)
+
+        self.profile = fin_data['assetProfile']
+
+    def to_csv(self, path, line_terminator='\n', sep=',', data_format=DataFormat.RAW):
+        with open(path, 'w') as file_handle:
+            csv_handle = csv.writer(file_handle, delimiter=sep)
+
+            csv_handle.writerow(['Profile'])
+
+            for mapping in self._info_mapping:
+                csv_handle.writerow([mapping[0], self.profile.get(mapping[1], '-')])
+
+            csv_handle.writerow([])
+            csv_handle.writerow(['Key Executives'])
+            csv_handle.writerow([i[0] for i in self._exec_mapping])
+
+            for executive in self.profile.get('companyOfficers', []):
+                csv_handle.writerow([
+                    executive.get('name'),
+                    executive.get('title'),
+                    executive.get('totalPay', IYahooData._default_row)[data_format],
+                    executive.get('exercisedValue', IYahooData._default_row)[data_format],
+                    executive.get('yearBorn')
+                    ])

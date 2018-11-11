@@ -3,6 +3,14 @@ class Locale:
     US = ""
     CA = "ca"
 
+    @staticmethod
+    def locale_url(locale):
+        if locale == Locale.US:
+            # Special case because the US is special
+            return "https://finance.yahoo.com/quote"
+        else:
+            return "https://{}.finance.yahoo.com/quote".format(locale)
+
 class DataEvent:
     HISTORICAL_PRICES = "history"
     DIVIDENDS = "div"
