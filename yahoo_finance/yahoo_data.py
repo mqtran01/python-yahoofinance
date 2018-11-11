@@ -5,6 +5,7 @@ import csv
 import requests
 import re
 import pandas as pd
+from io import StringIO
 
 from .data_configs import DataFormat, Locale
 
@@ -17,7 +18,7 @@ class IYahooData(ABC):
         self._base_url = Locale.locale_url(locale)
 
     @abstractmethod
-    def to_csv(self, path, line_terminator, sep):
+    def to_csv(self, path, sep, data_format, csv_dialect):
         pass
 
     @staticmethod
@@ -82,17 +83,15 @@ class CashFlow(IYahooData):
         self.cashflow = self._extract_cashflow(fin_data)
         self.cashflow.sort(key=lambda x: x['endDate']['raw'], reverse=True)
 
-    def to_csv(self, path, line_terminator='\n', sep=',', data_format=DataFormat.RAW):
-        with open(path, 'w') as file_handle:
-            csv_handle = csv.writer(file_handle, delimiter=sep)
+    def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        if path is None:
+            file_handle = StringIO()
+            self._write_csv(file_handle, csv_dialect, sep, data_format)
+            return file_handle.getvalue()
 
-            csv_rows = [self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt')]
-            for k, v in self._df_mapping.items():
-                csv_rows.append([])
-                csv_rows.append([k])
-                for name, key in v:
-                    csv_rows.append(self._csv_row(self.cashflow, name, key, data_format))
-            csv_handle.writerows(csv_rows)
+        # Path provided
+        with open(path, 'w') as file_handle:
+            self._write_csv(file_handle, csv_dialect, sep, data_format)
 
     def to_dfs(self, data_format=DataFormat.RAW):
         cols = [i['endDate']['fmt'] for i in self.cashflow]
@@ -117,6 +116,17 @@ class CashFlow(IYahooData):
 
     def _extract_cashflow(self, fin_data):
         return fin_data['cashflowStatementHistory']['cashflowStatements']
+
+    def _write_csv(self, file_handle, dialect, sep, data_format):
+        csv_handle = csv.writer(file_handle, dialect=dialect, delimiter=sep)
+
+        csv_rows = [self._csv_row(self.cashflow, 'Period ending', 'endDate', 'fmt')]
+        for k, v in self._df_mapping.items():
+            csv_rows.append([])
+            csv_rows.append([k])
+            for name, key in v:
+                csv_rows.append(self._csv_row(self.cashflow, name, key, data_format))
+        csv_handle.writerows(csv_rows)
 
 
 class CashFlowQuarterly(CashFlow):
