@@ -1,4 +1,16 @@
+import os
+import sys
 import setuptools
+
+if sys.argv[-1] == 'build':
+    os.system('python setup.py sdist bdist_wheel')
+    sys.exit()
+elif sys.argv[-1] == 'test':
+    os.system('twine upload --repository-url https://test.pypi.org/legacy/ dist/*')
+    sys.exit()
+elif sys.argv[-1] == 'deploy':
+    os.system('twine upload dist/*')
+    sys.exit()
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -26,9 +38,9 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7"
     ],
     install_requires=[
-        "pandas",
-        "beautifulsoup4",
-        "requests"
+        "pandas>=0.23.4",
+        "beautifulsoup4>=4.6.3",
+        "requests>=2.20.1"
     ]
 
 )
