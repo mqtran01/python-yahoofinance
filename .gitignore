@@ -37,6 +37,9 @@ MANIFEST
 # mypy
 .mypy_cache/
 
+# tox
+.tox
+
 notebook/
 .vscode/
 .DS_Store
