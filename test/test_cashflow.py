@@ -1,16 +1,11 @@
 import unittest
 from unittest import TestCase, mock, main
 from yahoofinance import CashFlow
+from test.mock_framework import MockResponse
 
-class MockResponse:
-    def __init__(self, text):
-        self.text = text
-
-    def json(self):
-        return self.json_data
 
 def mock_requests_get(*args, **kwargs):
-    with open('test/Cashflow.html') as file:
+    with open('test/resources/Cashflow.html') as file:
         return MockResponse(file.read())
 
 
