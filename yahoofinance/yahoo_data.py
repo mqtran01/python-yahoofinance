@@ -11,6 +11,9 @@ from datetime import date, datetime
 from .data_configs import DataFormat, Locale, DataEvent, DataFrequency
 
 class IYahooData(ABC):
+    """Test docstring"""
+
+    #: This is the default row
     _default_row = {
         x: '-' for x in DataFormat._FORMATS
     }
@@ -46,6 +49,7 @@ class IYahooData(ABC):
 
 
 class CashFlow(IYahooData):
+    """Hello world?"""
     _df_mapping = {
         'Overall': [
             ('Net Income', 'netIncome')
