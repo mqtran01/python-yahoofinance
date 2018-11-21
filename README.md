@@ -54,7 +54,7 @@ Current locales include:
 
 Documentation
 -------------
-you can find the documentation here: [python-yahoofinance.readthedocs.io](python-yahoofinance.readthedocs.io)
+you can find the documentation here: https://python-yahoofinance.readthedocs.io
 
 
 FAQs
