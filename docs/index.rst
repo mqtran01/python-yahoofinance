@@ -19,4 +19,12 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-.. autoclass:: yahoofinance.CashFlow
+Pls work
+========
+
+Is this even an API doc?
+
+.. toctree::
+    :maxdepth: 2
+
+    api.rst
