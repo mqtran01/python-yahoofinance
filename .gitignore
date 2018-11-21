@@ -43,3 +43,5 @@ MANIFEST
 notebook/
 .vscode/
 .DS_Store
+
+docs/_build/

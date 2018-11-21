@@ -11,6 +11,7 @@ pandas = "*"
 [dev-packages]
 jupyter = "*"
 tox = "*"
+sphinx = "*"
 
 [requires]
 python_version = "3.6"

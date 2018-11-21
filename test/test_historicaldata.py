@@ -16,7 +16,7 @@ def mock_requests_get(*args, **kwargs):
 
 class TestHistoricalPrices(TestCase):
 
-    @mock.patch('yahoofinance.yahoo_data.requests.get', side_effect=mock_requests_get)
+    @mock.patch('yahoofinance.historicaldata.requests.get', side_effect=mock_requests_get)
     def test_to_csv(self, mock_get):
         prices = HistoricalPrices('AAPL', '2018-10-10', '2018-10-16')
         csv = prices.to_csv()
@@ -31,7 +31,7 @@ class TestHistoricalPrices(TestCase):
         self.assertEqual(csv, expected)
 
 
-    @mock.patch('yahoofinance.yahoo_data.requests.get', side_effect=mock_requests_get)
+    @mock.patch('yahoofinance.historicaldata.requests.get', side_effect=mock_requests_get)
     def test_to_csv_unix_delim(self, mock_get):
         prices = HistoricalPrices('AAPL', '2018-10-10', '2018-10-16')
         csv = prices.to_csv(csv_dialect='unix')
@@ -45,7 +45,7 @@ class TestHistoricalPrices(TestCase):
 """
         self.assertEqual(csv, expected)
 
-    @mock.patch('yahoofinance.yahoo_data.requests.get', side_effect=mock_requests_get)
+    @mock.patch('yahoofinance.historicaldata.requests.get', side_effect=mock_requests_get)
     def test_to_dfs(self, mock_get):
         prices = HistoricalPrices('AAPL', '2018-10-10', '2018-10-16')
         dfs = prices.to_dfs()

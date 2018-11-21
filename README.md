@@ -1,7 +1,9 @@
 Yahoo Finance Data for Python
 =============================
 
-[![Build Status](https://travis-ci.com/mqtran01/python-yahoo-finance.svg?branch=master)](https://travis-ci.com/mqtran01/python-yahoo-finance)
+[![Build Status](https://travis-ci.com/mqtran01/python-yahoofinance.svg?branch=master)](https://travis-ci.com/mqtran01/python-yahoofinance)
+
+[![Documentation Status](https://readthedocs.org/projects/python-yahoofinance/badge/?version=latest)](https://python-yahoofinance.readthedocs.io/en/latest/?badge=latest)
 
 Python module to get data readily available from Yahoo Finance. The data is retrieved directly from the website with no data changes.
 
@@ -52,7 +54,7 @@ Current locales include:
 
 Documentation
 -------------
-Coming soon!
+you can find the documentation here: [python-yahoofinance.readthedocs.io](python-yahoofinance.readthedocs.io)
 
 
 FAQs
