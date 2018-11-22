@@ -12,7 +12,7 @@ from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
 from .interfaces import IYahooData
 
 class HistoricalPrices(IYahooData):
-    """Creates an object that retrieves data from Yahoo Finance.
+    """Retrieves historical data from Yahoo Finance.
 
     :param instrument: The a stock instrument code to query.
     :param start_date: The start date for the query (inclusive).
@@ -21,7 +21,7 @@ class HistoricalPrices(IYahooData):
         the object passed in (string) will be parsed to the format string. Default: `%Y-%m-%d`.
     :param event: A `DataEvent` constant to determine what event to query for. Default: `DataEvent.HISTORICAL_PRICES`.
     :param frequency: A `DataFrequency` constant to determine the interval between records. Default: `DataFrequency.DAILY`.
-    :param locale: A `Local` constant to determine which domain to query from. Default: `Locale.US`.
+    :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
 
     :return: :class:`HistoricalPrices` object
     :rtype: `HistoricalPrices`
@@ -30,7 +30,7 @@ class HistoricalPrices(IYahooData):
 
     Usage::
 
-      >>> import yahoofinance as HistoricalPrices
+      >>> from yahoofinance import HistoricalPrices
       >>> req = HistoricalPrices('AAPL')
       Object<HistoricalPrices>
     """
@@ -87,6 +87,19 @@ class HistoricalPrices(IYahooData):
         return cookie, crumb
 
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        """Generates a CSV file.
+
+        :param path: The path to a file location. If it is `None`, this method returns the
+            CSV as a string.
+        :param sep: The separator between elements in the new line. NOT USED
+        :param data_format: A :class:`DataFormat` constant to determine how the data is
+            exported. NOT USED
+        :param csv_dialect: The dialect to write the CSV file. See Python in-built :class:`csv`.
+
+        :return: `None` or :class:`string`
+        :rtype: `None` or `string`
+
+        """
         csv_data = self.prices
         # HACK: To reverse the new line encoding provided. Find a better way to handle this
         if csv_dialect == 'excel':
@@ -99,5 +112,18 @@ class HistoricalPrices(IYahooData):
             file_handle.write(csv_data)
 
     def to_dfs(self, data_format=DataFormat.RAW):
+        """Generates a dictionary containing :class:`pandas.DataFrame`.
+
+        :param data_format: A :class:`DataFormat` constant to determine how the data is exported.
+            NOT USED
+
+        :return: :class:`pandas.DataFrame`
+        :rtype: `pandas.DataFrame`
+
+        Dictionary keys ::
+
+            Historical Prices
+        """
+
         # This is not affected by the data format
         return {'Historical Prices': pd.read_csv(StringIO(self.prices), index_col=['Date'])}

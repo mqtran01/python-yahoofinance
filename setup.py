@@ -17,7 +17,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="yahoofinance",
-    version="0.0.1",
+    version="0.0.2",
     author="Michael Tran",
     author_email="example@example.com",
     description="A library to retrieve data from Yahoo Finance",
