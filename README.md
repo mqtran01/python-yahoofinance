@@ -28,8 +28,8 @@ To export the Profile data to CSV, it is simple!
 
 If we are looking to export [Apple's Asset Profile](https://finance.yahoo.com/quote/AAPL/profile) we can do the following:
 ``` {.sourceCode .python}
->>> from yahoo_finance import yahoo_data as yd
->>> profile = yd.AssetProfile('AAPL')
+>>> import yahoofinance as yf
+>>> profile = yf.AssetProfile('AAPL')
 >>> profile.to_csv('AAPL-profile.csv')
 ```
 You can now find the profile information in a CSV file called `AAPL-profile.csv`.
@@ -41,7 +41,7 @@ Optional Usage
 We can add in a locale to choose a specific region to query from. For example, from Australia, we can query from the Australian Yahoo Finance website to get *marginally* faster query times. Using the Asset Profile example previously:
 
 ``` {.sourceCode .python}
->>> from yahoo_finance import yahoo_data as yd
+>>> import yahoofinance as yf
 >>> profile = yd.AssetProfile('AAPL', locale=Locale.AU)
 >>> profile.to_csv('AAPL-profile.csv')
 ```

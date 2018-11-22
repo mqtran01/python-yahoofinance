@@ -12,6 +12,24 @@ from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
 from .interfaces import IYahooData
 
 class AssetProfile(IYahooData):
+    """Retrieves the asset profile from Yahoo Finance.
+
+    :param stock: The stock ticker
+    :param locale: A `Local` constant to determine which domain to query from. Default: `Locale.US`.
+
+    :return: :class:`AssetProfile` object
+    :rtype: `AssetProfile`
+
+    E.g. https://finance.yahoo.com/quote/AAPL/profile
+
+    Usage::
+
+      >>> from yahoofinance import AssetProfile
+      >>> req = AssetProfile('AAPL')
+      Object<AssetProfile>
+
+    """
+
     _info_mapping = (
         ('Address', 'address1'),
         # TODO: Will there be address2, 3 etc.?
@@ -42,6 +60,20 @@ class AssetProfile(IYahooData):
         self.profile = fin_data['assetProfile']
 
     def to_csv(self, path, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        """Generates a CSV file.
+
+        :param path: The path to a file location. If it is `None`, this method returns the
+            CSV as a string.
+        :param sep: The separator between elements in the new line. NOT USED
+        :param data_format: A :class:`DataFormat` constant to determine how the data is
+            exported. NOT USED
+        :param csv_dialect: The dialect to write the CSV file. See Python in-built :class:`csv`.
+
+        :return: `None` or :class:`string`
+        :rtype: `None` or `string`
+
+        """
+
         # TODO: Streamline this
         with open(path, 'w') as file_handle:
             csv_handle = csv.writer(file_handle, delimiter=sep)

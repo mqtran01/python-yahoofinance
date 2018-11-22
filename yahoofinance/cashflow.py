@@ -13,6 +13,23 @@ from .interfaces import IYahooData
 
 
 class CashFlow(IYahooData):
+    """Retrieves annual cash flow information from Yahoo Finance.
+
+    :param stock: The a stock code to query.
+    :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
+
+    :return: :class:`CashFlow` object
+    :rtype: `CashFlow`
+
+    E.g. https://finance.yahoo.com/quote/AAPL/cash-flow
+
+    Usage::
+
+      >>> from yahoofinance import CashFlow
+      >>> req = CashFlow('AAPL')
+      Object<CashFlow>
+    """
+
     _df_mapping = {
         'Overall': [
             ('Net Income', 'netIncome')
@@ -56,6 +73,19 @@ class CashFlow(IYahooData):
         self.cashflow.sort(key=lambda x: x['endDate']['raw'], reverse=True)
 
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
+        """Generates a CSV file.
+
+        :param path: The path to a file location. If it is `None`, this method returns the
+            CSV as a string.
+        :param sep: The separator between elements in the new line.
+        :param data_format: A :class:`DataFormat` constant to determine how the data is
+            exported.
+        :param csv_dialect: The dialect to write the CSV file. See Python in-built :class:`csv`.
+
+        :return: `None` or :class:`string`
+        :rtype: `None` or `string`
+        """
+
         if path is None:
             file_handle = StringIO()
             self._write_csv(file_handle, csv_dialect, sep, data_format)
@@ -66,6 +96,23 @@ class CashFlow(IYahooData):
             self._write_csv(file_handle, csv_dialect, sep, data_format)
 
     def to_dfs(self, data_format=DataFormat.RAW):
+        """Generates a dictionary containing :class:`pandas.DataFrame`.
+
+        :param data_format: A :class:`DataFormat` constant to determine how the data is exported.
+
+        :return: :class:`pandas.DataFrame`
+        :rtype: `pandas.DataFrame`
+
+        Dictionary keys ::
+
+            Cash Flow
+            Overall
+            Operating activities
+            Investment activities
+            Financing activities
+            Changes in Cash
+        """
+
         cols = [i['endDate']['fmt'] for i in self.cashflow]
         multiindex = []
         data = []
@@ -102,6 +149,23 @@ class CashFlow(IYahooData):
 
 
 class CashFlowQuarterly(CashFlow):
+    """Retrieves quarterly cash flow information from Yahoo Finance.
+
+    :param stock: The a stock code to query.
+    :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
+
+    :return: :class:`CashFlowQuarterly` object
+    :rtype: `CashFlowQuarterly`
+
+    E.g. https://finance.yahoo.com/quote/AAPL/cash-flow
+
+    Usage::
+
+      >>> from yahoofinance import CashFlowQuarterly
+      >>> req = CashFlowQuarterly('AAPL')
+      Object<CashFlowQuarterly>
+    """
+
     def _header_text(self):
         return 'Cash Flow (Quarterly)'
 

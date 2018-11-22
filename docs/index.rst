@@ -3,8 +3,8 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to yahoofinance's documentation!
-========================================
+Yahoo Finance Data for Python Documentation
+===========================================
 
 .. toctree::
    :maxdepth: 2
@@ -19,10 +19,17 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
-Pls work
-========
+Basic Usage
+===========
 
-Is this even an API doc?
+.. toctree::
+    :maxdepth: 2
+
+    usage.rst
+
+
+API Documentation
+=================
 
 .. toctree::
     :maxdepth: 2
