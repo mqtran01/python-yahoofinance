@@ -174,4 +174,4 @@ class BalanceSheetQuarterly(BalanceSheet):
     """
 
     def _extract_BalanceSheet(self, fin_data):
-        return fin_data['balanceSheetHistoryQuarterly']['BalanceSheetStatements']
+        return fin_data['balanceSheetHistoryQuarterly']['balanceSheetStatements']

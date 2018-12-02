@@ -13,6 +13,7 @@ jupyter = "*"
 tox = "*"
 sphinx = "*"
 matplotlib = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.6"

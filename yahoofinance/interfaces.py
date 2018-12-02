@@ -39,11 +39,11 @@ class IYahooData(ABC):
 
     @staticmethod
     def _csv_row(dataset, heading, index, data_fmt):
-        return [heading, ''] + [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
+        return [heading, ''] + [(data[index] if data.get(index) else IYahooData._default_row)[data_fmt] for data in dataset]
 
     @staticmethod
     def _df_row(dataset, index, data_fmt):
-        return [data.get(index, IYahooData._default_row)[data_fmt] for data in dataset]
+        return [(data[index] if data.get(index) else IYahooData._default_row)[data_fmt] for data in dataset]
 
     @staticmethod
     def _fetch_quote_summary(url):
