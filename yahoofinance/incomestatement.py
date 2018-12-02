@@ -166,4 +166,4 @@ class IncomeStatementQuarterly(IncomeStatement):
     """
 
     def _extract_IncomeStatement(self, fin_data):
-        return fin_data['IncomeStatementHistoryQuarterly']['incomeStatementHistory']
+        return fin_data['incomeStatementHistoryQuarterly']['incomeStatementHistory']
