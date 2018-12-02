@@ -17,6 +17,16 @@ Historical Data
     :members:
 
 
+Balance Sheet
+-------------
+
+.. autoclass:: yahoofinance.BalanceSheet
+    :members:
+
+.. autoclass:: yahoofinance.BalanceSheetQuarterly
+    :members:
+
+
 Cash Flow
 ---------
 
@@ -26,6 +36,15 @@ Cash Flow
 .. autoclass:: yahoofinance.CashFlowQuarterly
     :members:
 
+
+Income Statement
+----------------
+
+.. autoclass:: yahoofinance.IncomeStatement
+    :members:
+
+.. autoclass:: yahoofinance.IncomeStatementQuarterly
+    :members:
 
 Asset Profile
 -------------

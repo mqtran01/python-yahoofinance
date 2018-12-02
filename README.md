@@ -52,9 +52,15 @@ Current locales include:
 - `Locale.US` (United States)
 
 
+Example Use Case
+----------------
+You can find an example use case in the following Google Colab notebook: https://colab.research.google.com/drive/1n5L2NVkRZuYUi_RaC54JsJN79Dq5wnEb
+
+
+
 Documentation
 -------------
-you can find the documentation here: https://python-yahoofinance.readthedocs.io
+You can find the documentation here: https://python-yahoofinance.readthedocs.io
 
 
 FAQs

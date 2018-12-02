@@ -12,6 +12,7 @@ pandas = "*"
 jupyter = "*"
 tox = "*"
 sphinx = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.6"
