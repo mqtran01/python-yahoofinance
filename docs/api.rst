@@ -3,6 +3,9 @@
 API Documentation
 =================
 
+Please note that the API is currently under development and things may
+change rapidly!
+
 Core Interface
 --------------
 
@@ -16,6 +19,10 @@ Historical Data
 .. autoclass:: yahoofinance.HistoricalPrices
     :members:
 
+
+**Note: All of the below classes below are experimental and results may
+vary significantly as they data is scraped from the website.
+Use at your own risk!**
 
 Balance Sheet
 -------------

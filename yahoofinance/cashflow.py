@@ -15,6 +15,8 @@ from .interfaces import IYahooData
 class CashFlow(IYahooData):
     """Retrieves annual cash flow information from Yahoo Finance.
 
+    **EXPERIMENTAL**
+
     :param stock: The a stock code to query.
     :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
 
@@ -150,6 +152,8 @@ class CashFlow(IYahooData):
 
 class CashFlowQuarterly(CashFlow):
     """Retrieves quarterly cash flow information from Yahoo Finance.
+
+    **EXPERIMENTAL**
 
     :param stock: The a stock code to query.
     :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.

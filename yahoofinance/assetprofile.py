@@ -14,6 +14,8 @@ from .interfaces import IYahooData
 class AssetProfile(IYahooData):
     """Retrieves the asset profile from Yahoo Finance.
 
+    **EXPERIMENTAL**
+
     :param stock: The stock ticker
     :param locale: A `Local` constant to determine which domain to query from. Default: `Locale.US`.
 

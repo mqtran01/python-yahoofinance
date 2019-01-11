@@ -15,6 +15,8 @@ from .interfaces import IYahooData
 class IncomeStatement(IYahooData):
     """Retrieves annual balance sheet information from Yahoo Finance.
 
+    **EXPERIMENTAL**
+
     :param stock: The a stock code to query.
     :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
 
@@ -149,6 +151,8 @@ class IncomeStatement(IYahooData):
 
 class IncomeStatementQuarterly(IncomeStatement):
     """Retrieves quarterly balance sheet information from Yahoo Finance.
+
+    **EXPERIMENTAL**
 
     :param stock: The a stock code to query.
     :param locale: A `Locale` constant to determine which domain to query from. Default: `Locale.US`.
