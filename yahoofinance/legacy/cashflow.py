@@ -8,8 +8,8 @@ import pandas as pd
 from io import StringIO
 from datetime import date, datetime
 
-from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
-from .interfaces import IYahooData
+from ..dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
+from ..interfaces import IYahooData
 
 
 class CashFlow(IYahooData):
@@ -73,6 +73,9 @@ class CashFlow(IYahooData):
 
         self.cashflow = self._extract_cashflow(fin_data)
         self.cashflow.sort(key=lambda x: x['endDate']['raw'], reverse=True)
+
+    def raw(self):
+        return self.cashflow
 
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
         """Generates a CSV file.

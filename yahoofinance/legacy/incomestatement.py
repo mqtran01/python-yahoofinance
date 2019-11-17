@@ -8,8 +8,8 @@ import pandas as pd
 from io import StringIO
 from datetime import date, datetime
 
-from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
-from .interfaces import IYahooData
+from ..dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
+from ..interfaces import IYahooData
 
 
 class IncomeStatement(IYahooData):
@@ -75,6 +75,9 @@ class IncomeStatement(IYahooData):
 
         self.IncomeStatement = self._extract_IncomeStatement(fin_data)
         self.IncomeStatement.sort(key=lambda x: x['endDate']['raw'], reverse=True)
+
+    def raw(self):
+        return self.IncomeStatement
 
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
         """Generates a CSV file.

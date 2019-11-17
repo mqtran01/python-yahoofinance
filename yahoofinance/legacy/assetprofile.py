@@ -8,8 +8,8 @@ import pandas as pd
 from io import StringIO
 from datetime import date, datetime
 
-from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
-from .interfaces import IYahooData
+from ..dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
+from ..interfaces import IYahooData
 
 class AssetProfile(IYahooData):
     """Retrieves the asset profile from Yahoo Finance.
@@ -60,6 +60,9 @@ class AssetProfile(IYahooData):
         fin_data = self._fetch_quote_summary(url)
 
         self.profile = fin_data['assetProfile']
+
+    def raw(self):
+        return self.profile
 
     def to_csv(self, path, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
         """Generates a CSV file.

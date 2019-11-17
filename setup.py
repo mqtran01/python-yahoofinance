@@ -38,9 +38,9 @@ setuptools.setup(
         "Programming Language :: Python :: 3.7"
     ],
     install_requires=[
-        "pandas>=0.23.4",
-        "beautifulsoup4>=4.6.3",
-        "requests>=2.20.1"
+        "pandas>=0.25.3",
+        "beautifulsoup4>=4.8.1",
+        "requests>=2.22.0"
     ]
 
 )

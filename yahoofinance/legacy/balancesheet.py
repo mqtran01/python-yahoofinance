@@ -8,8 +8,8 @@ import pandas as pd
 from io import StringIO
 from datetime import date, datetime
 
-from .dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
-from .interfaces import IYahooData
+from ..dataconfigs import DataFormat, Locale, DataEvent, DataFrequency
+from ..interfaces import IYahooData
 
 
 class BalanceSheet(IYahooData):
@@ -83,6 +83,9 @@ class BalanceSheet(IYahooData):
 
         self.BalanceSheet = self._extract_BalanceSheet(fin_data)
         self.BalanceSheet.sort(key=lambda x: x['endDate']['raw'], reverse=True)
+
+    def raw(self):
+        return self.BalanceSheet
 
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
         """Generates a CSV file.

@@ -86,6 +86,10 @@ class HistoricalPrices(IYahooData):
 
         return cookie, crumb
 
+    @property
+    def raw(self):
+        return self.prices
+
     def to_csv(self, path=None, sep=',', data_format=DataFormat.RAW, csv_dialect='excel'):
         """Generates a CSV file.
 

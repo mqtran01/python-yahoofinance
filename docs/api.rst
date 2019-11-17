@@ -20,43 +20,43 @@ Historical Data
     :members:
 
 
-**Note: All of the below classes below are experimental and results may
+**Note: All of the below classes below are experimental (and for now archived into legacy) and results may
 vary significantly as they data is scraped from the website.
 Use at your own risk!**
 
 Balance Sheet
 -------------
 
-.. autoclass:: yahoofinance.BalanceSheet
+.. autoclass:: yahoofinance.legacy.BalanceSheet
     :members:
 
-.. autoclass:: yahoofinance.BalanceSheetQuarterly
+.. autoclass:: yahoofinance.legacy.BalanceSheetQuarterly
     :members:
 
 
 Cash Flow
 ---------
 
-.. autoclass:: yahoofinance.CashFlow
+.. autoclass:: yahoofinance.legacy.CashFlow
     :members:
 
-.. autoclass:: yahoofinance.CashFlowQuarterly
+.. autoclass:: yahoofinance.legacy.CashFlowQuarterly
     :members:
 
 
 Income Statement
 ----------------
 
-.. autoclass:: yahoofinance.IncomeStatement
+.. autoclass:: yahoofinance.legacy.IncomeStatement
     :members:
 
-.. autoclass:: yahoofinance.IncomeStatementQuarterly
+.. autoclass:: yahoofinance.legacy.IncomeStatementQuarterly
     :members:
 
 Asset Profile
 -------------
 
-.. autoclass:: yahoofinance.AssetProfile
+.. autoclass:: yahoofinance.legacy.AssetProfile
     :members:
 
 

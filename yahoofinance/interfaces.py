@@ -25,6 +25,11 @@ class IYahooData(ABC):
     def __init__(self, locale):
         self._base_url = Locale.locale_url(locale)
 
+    @property
+    @abstractmethod
+    def raw(self):
+        pass
+
     @abstractmethod
     def to_csv(self):
     # def to_csv(self, path, sep, data_format, csv_dialect):
